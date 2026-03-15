@@ -32,7 +32,7 @@ async function loadCustomerSelect() {
   customers.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.id;
-    opt.textContent = `${c.name}（${fmt(c.points)}pt）`;
+    opt.textContent = c.name;
     sel.appendChild(opt);
   });
   // カートの顧客を復元
@@ -188,7 +188,6 @@ function renderReceipt(data) {
 
   if (data.customer_name) {
     lines.push(`  顧客: ${data.customer_name}`);
-    lines.push(`  獲得ポイント: +${data.points_earned || 0}pt`);
   }
 
   lines.push('  ※ 軽減税率（8%）対象商品');
@@ -215,7 +214,7 @@ async function loadCustomers() {
 function renderCustomers(list) {
   const tbody = document.getElementById('customerTable');
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">顧客が登録されていません</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">顧客が登録されていません</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(c => `
@@ -227,11 +226,6 @@ function renderCustomers(list) {
       </td>
       <td class="text-muted">${c.email || '—'}</td>
       <td class="text-muted">${c.phone || '—'}</td>
-      <td class="text-center">
-        <span class="badge bg-warning text-dark">
-          <i class="bi bi-star-fill me-1"></i>${c.points.toLocaleString()}pt
-        </span>
-      </td>
       <td class="text-muted small">${(c.created_at || '').slice(0, 10)}</td>
       <td class="text-center">
         <button class="btn btn-sm btn-outline-primary me-1"

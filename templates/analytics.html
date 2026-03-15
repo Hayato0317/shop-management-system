@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}売上分析{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-bar-chart-line text-primary me-2"></i>売上分析</h4>
+</div>
+
+{% if ranking %}
+  <!-- サマリーカード -->
+  {% set total_items_sold = ranking | sum(attribute='total_qty') %}
+  {% set total_revenue    = ranking | sum(attribute='total_amount') %}
+  <div class="row g-3 mb-4">
+    <div class="col-sm-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body py-3">
+          <div class="text-muted small">販売商品種類</div>
+          <div class="fs-3 fw-bold text-primary">{{ ranking | length }}</div>
+          <div class="text-muted" style="font-size:.75rem;">種類</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body py-3">
+          <div class="text-muted small">総販売数</div>
+          <div class="fs-3 fw-bold text-success">{{ "{:,}".format(total_items_sold) }}</div>
+          <div class="text-muted" style="font-size:.75rem;">個</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card shadow-sm text-center">
+        <div class="card-body py-3">
+          <div class="text-muted small">総売上（税込）</div>
+          <div class="fs-3 fw-bold text-warning">¥{{ "{:,}".format(total_revenue | int) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 売上ランキング表 -->
+  <div class="card shadow-sm">
+    <div class="card-header fw-bold">
+      <i class="bi bi-trophy text-warning me-2"></i>商品別売上ランキング
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="text-center" style="width:60px;">順位</th>
+            <th>商品名</th>
+            <th class="text-center">販売数</th>
+            <th class="text-end">売上合計（税込）</th>
+            <th class="text-center">購入件数</th>
+            <th style="min-width:140px;">割合</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in ranking %}
+          {% set r_qty = r['total_qty'] %}
+          {% set r_amt = r['total_amount'] | int %}
+          {% set r_pct = (r_qty / max_qty * 100) | int %}
+          <tr>
+            <td class="text-center">
+              {% if loop.index == 1 %}
+                <span class="badge bg-warning text-dark fs-6">🥇</span>
+              {% elif loop.index == 2 %}
+                <span class="badge bg-secondary fs-6">🥈</span>
+              {% elif loop.index == 3 %}
+                <span class="badge" style="background:#cd7f32; font-size:.9rem;">🥉</span>
+              {% else %}
+                <span class="text-muted fw-bold">{{ loop.index }}</span>
+              {% endif %}
+            </td>
+            <td class="fw-semibold">{{ r['product_name'] }}</td>
+            <td class="text-center">
+              <span class="badge bg-primary rounded-pill">{{ "{:,}".format(r_qty) }} 個</span>
+            </td>
+            <td class="text-end fw-bold text-success">¥{{ "{:,}".format(r_amt) }}</td>
+            <td class="text-center text-muted small">{{ r['purchase_count'] }} 件</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:8px;">
+                  <div class="progress-bar bg-primary" style="width:{{ r_pct }}%"></div>
+                </div>
+                <span class="text-muted small" style="min-width:36px;">{{ r_pct }}%</span>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% else %}
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-bar-chart fs-1"></i>
+    <p class="mt-3">まだ売上データがありません。<br>精算を行うとここに表示されます。</p>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -71,19 +71,28 @@ def customer_detail(customer_id: int):
     customer = db.get_customer(customer_id)
     if not customer:
         return redirect(url_for("customers"))
-    purchases = db.get_customer_purchases(customer_id)
-    total_spent = sum(p["total"] for p in purchases)
+    purchases     = db.get_customer_purchases(customer_id)
+    total_spent   = sum(p["total"] for p in purchases)
+    product_stats = db.get_customer_product_stats(customer_id)
     return render_template(
         "customer_detail.html",
         customer=customer,
         purchases=purchases,
         total_spent=total_spent,
+        product_stats=product_stats,
     )
 
 
 @app.route("/history")
 def history():
     return render_template("history.html")
+
+
+@app.route("/analytics")
+def analytics():
+    ranking = db.get_product_sales_ranking()
+    max_qty  = ranking[0]["total_qty"] if ranking else 1
+    return render_template("analytics.html", ranking=ranking, max_qty=max_qty)
 
 
 # ══════════════════════════════════════════════════════
@@ -272,7 +281,6 @@ def api_checkout():
     if cart.customer_id:
         c = db.get_customer(cart.customer_id)
         receipt["customer_name"] = c["name"] if c else None
-        receipt["points_earned"] = int(cart.total // 100)
 
     cart.clear()
     save_cart(cart)

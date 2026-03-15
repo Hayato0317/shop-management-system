@@ -230,14 +230,6 @@ def delete_customer(customer_id: int) -> bool:
         return True
 
 
-def add_points(customer_id: int, points: int) -> None:
-    with get_conn() as conn:
-        conn.execute(
-            "UPDATE customers SET points = points + ? WHERE id = ?",
-            (points, customer_id),
-        )
-
-
 # ── 購入履歴 CRUD ────────────────────────────────────
 
 def save_purchase(
@@ -268,12 +260,6 @@ def save_purchase(
                 for item in items
             ],
         )
-        # ポイント付与（合計の1%）- 同じ接続で実行してロックを回避
-        if customer_id:
-            conn.execute(
-                "UPDATE customers SET points = points + ? WHERE id = ?",
-                (int(total // 100), customer_id),
-            )
         return purchase_id
 
 
@@ -301,6 +287,38 @@ def get_purchase_with_items(purchase_id: int) -> dict | None:
         ).fetchall()
         purchase["items"] = [dict(i) for i in items]
         return purchase
+
+
+def get_customer_product_stats(customer_id: int) -> list[dict]:
+    """顧客別：商品ごとの購入数量合計（降順）"""
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT pi.product_name,
+                   SUM(pi.quantity) AS total_qty,
+                   SUM(pi.subtotal) AS total_amount
+            FROM purchase_items pi
+            JOIN purchases p ON pi.purchase_id = p.id
+            WHERE p.customer_id = ?
+            GROUP BY pi.product_name
+            ORDER BY total_qty DESC
+        """, (customer_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_product_sales_ranking() -> list[dict]:
+    """全商品：数量・売上金額・購入件数ランキング"""
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT pi.product_name,
+                   SUM(pi.quantity)     AS total_qty,
+                   SUM(pi.subtotal)     AS total_amount,
+                   COUNT(DISTINCT p.id) AS purchase_count
+            FROM purchase_items pi
+            JOIN purchases p ON pi.purchase_id = p.id
+            GROUP BY pi.product_name
+            ORDER BY total_qty DESC
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_customer_purchases(customer_id: int) -> list[dict]:

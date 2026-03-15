@@ -268,9 +268,12 @@ def save_purchase(
                 for item in items
             ],
         )
-        # ポイント付与（合計の1%）
+        # ポイント付与（合計の1%）- 同じ接続で実行してロックを回避
         if customer_id:
-            add_points(customer_id, int(total // 100))
+            conn.execute(
+                "UPDATE customers SET points = points + ? WHERE id = ?",
+                (int(total // 100), customer_id),
+            )
         return purchase_id
 
 

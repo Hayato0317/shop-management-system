@@ -49,6 +49,11 @@ def save_cart(cart: Cart) -> None:
 #  画面ルート
 # ══════════════════════════════════════════════════════
 
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok"}), 200
+
+
 @app.route("/")
 def pos():
     products = build_product_master()

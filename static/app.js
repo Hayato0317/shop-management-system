@@ -40,6 +40,18 @@ async function loadCustomerSelect() {
   if (cart.customer_id) sel.value = cart.customer_id;
 }
 
+function filterPOS(categoryId) {
+  document.querySelectorAll('#posCategoryTabs .btn').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline-primary');
+  });
+  const btn = categoryId ? document.getElementById(`poscat-${categoryId}`) : document.getElementById('poscat-all');
+  if (btn) { btn.classList.remove('btn-outline-primary'); btn.classList.add('btn-primary'); }
+  document.querySelectorAll('.product-col').forEach(col => {
+    col.style.display = (!categoryId || col.dataset.categoryId == categoryId) ? '' : 'none';
+  });
+}
+
 async function addToCart(productId) {
   const cart = await api('/api/cart/add', 'POST', { product_id: productId, quantity: 1 });
   renderCart(cart);
@@ -305,21 +317,109 @@ async function deleteCustomer(id, name) {
    商品管理画面
    ══════════════════════════════════════════ */
 const TAX_RATE = { standard: 0.10, reduced: 0.08 };
-const TAX_LABEL = { standard: '標準（10%）', reduced: '軽減（8%）' };
 
-function initProducts() {
+let allProducts = [];
+let allCategories = [];
+let activeProductCategory = null;
+
+async function initProducts() {
+  await loadCategories();
   loadProducts();
 }
 
+// ── カテゴリー ────────────────────────────
+
+async function loadCategories() {
+  allCategories = await api('/api/categories');
+  renderCategoryTabs();
+  renderCategorySelects();
+  renderCategoryList();
+}
+
+function renderCategoryTabs() {
+  const tabs = document.getElementById('productCategoryTabs');
+  if (!tabs) return;
+  tabs.innerHTML = `<button class="btn btn-sm btn-primary" onclick="filterProducts(null)" id="pcat-all">すべて</button>`;
+  allCategories.forEach(c => {
+    tabs.innerHTML += ` <button class="btn btn-sm btn-outline-primary" onclick="filterProducts(${c.id})" id="pcat-${c.id}">${c.name}</button>`;
+  });
+}
+
+function renderCategorySelects() {
+  ['addPCategory', 'editPCategory'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">未分類</option>';
+    allCategories.forEach(c => {
+      sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    });
+    sel.value = current;
+  });
+}
+
+function renderCategoryList() {
+  const list = document.getElementById('categoryList');
+  if (!list) return;
+  if (allCategories.length === 0) {
+    list.innerHTML = '<li class="list-group-item text-muted text-center small">カテゴリーがありません</li>';
+    return;
+  }
+  list.innerHTML = allCategories.map(c => `
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span>${c.name}</span>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </li>
+  `).join('');
+}
+
+function filterProducts(categoryId) {
+  activeProductCategory = categoryId;
+  document.querySelectorAll('#productCategoryTabs .btn').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-outline-primary');
+  });
+  const btn = categoryId ? document.getElementById(`pcat-${categoryId}`) : document.getElementById('pcat-all');
+  if (btn) { btn.classList.remove('btn-outline-primary'); btn.classList.add('btn-primary'); }
+  const filtered = categoryId ? allProducts.filter(p => p.category_id == categoryId) : allProducts;
+  renderProducts(filtered);
+}
+
+async function createCategory() {
+  const name = document.getElementById('newCategoryName').value.trim();
+  const errEl = document.getElementById('categoryError');
+  if (!name) return;
+  const res = await api('/api/categories', 'POST', { name });
+  if (res.error) {
+    errEl.textContent = res.error;
+    errEl.classList.remove('d-none');
+    return;
+  }
+  errEl.classList.add('d-none');
+  document.getElementById('newCategoryName').value = '';
+  await loadCategories();
+}
+
+async function deleteCategory(id, name) {
+  if (!confirm(`「${name}」を削除してもよいですか？\n※ このカテゴリーの商品は「未分類」になります。`)) return;
+  await api(`/api/categories/${id}`, 'DELETE');
+  await loadCategories();
+  loadProducts();
+}
+
+// ── 商品 ──────────────────────────────────
+
 async function loadProducts() {
-  const products = await api('/api/products');
-  renderProducts(products);
+  allProducts = await api('/api/products');
+  filterProducts(activeProductCategory);
 }
 
 function renderProducts(list) {
   const tbody = document.getElementById('productTable');
   if (list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">商品が登録されていません</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">商品が登録されていません</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(p => {
@@ -329,6 +429,11 @@ function renderProducts(list) {
         <td class="text-muted small">${p.id}</td>
         <td class="text-center fs-5">${p.emoji || '—'}</td>
         <td class="fw-semibold">${p.name}</td>
+        <td>
+          ${p.category_name
+            ? `<span class="badge bg-light text-dark border">${p.category_name}</span>`
+            : '<span class="text-muted small">—</span>'}
+        </td>
         <td class="text-end">¥${p.price.toLocaleString()}</td>
         <td class="text-end fw-bold text-primary">¥${taxed.toLocaleString()}</td>
         <td class="text-center">
@@ -357,6 +462,7 @@ async function createProduct() {
     price:        parseFloat(document.getElementById('addPPrice').value),
     tax_category: document.getElementById('addPTax').value,
     emoji:        document.getElementById('addPEmoji').value.trim(),
+    category_id:  document.getElementById('addPCategory').value || null,
   };
   const res = await api('/api/products', 'POST', body);
   const errEl = document.getElementById('addProductError');
@@ -368,16 +474,18 @@ async function createProduct() {
   bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
   ['addPName', 'addPPrice', 'addPEmoji'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('addPTax').value = 'standard';
+  document.getElementById('addPCategory').value = '';
   errEl.classList.add('d-none');
   loadProducts();
 }
 
 function openEditProduct(p) {
-  document.getElementById('editPId').value    = p.id;
-  document.getElementById('editPName').value  = p.name;
-  document.getElementById('editPPrice').value = p.price;
-  document.getElementById('editPTax').value   = p.tax_category;
-  document.getElementById('editPEmoji').value = p.emoji || '';
+  document.getElementById('editPId').value       = p.id;
+  document.getElementById('editPName').value     = p.name;
+  document.getElementById('editPPrice').value    = p.price;
+  document.getElementById('editPTax').value      = p.tax_category;
+  document.getElementById('editPEmoji').value    = p.emoji || '';
+  document.getElementById('editPCategory').value = p.category_id || '';
   document.getElementById('editProductError').classList.add('d-none');
   new bootstrap.Modal(document.getElementById('editProductModal')).show();
 }
@@ -389,6 +497,7 @@ async function updateProduct() {
     price:        parseFloat(document.getElementById('editPPrice').value),
     tax_category: document.getElementById('editPTax').value,
     emoji:        document.getElementById('editPEmoji').value.trim(),
+    category_id:  document.getElementById('editPCategory').value || null,
   };
   const res = await api(`/api/products/${id}`, 'PUT', body);
   const errEl = document.getElementById('editProductError');

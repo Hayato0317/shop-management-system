@@ -2,11 +2,19 @@
 {% block title %}商品管理{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center mb-4 gap-3">
+<div class="d-flex align-items-center mb-3 gap-2">
   <h4 class="mb-0 fw-bold"><i class="bi bi-box-seam text-primary me-2"></i>商品管理</h4>
-  <button class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#addProductModal">
+  <button class="btn btn-outline-secondary btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#categoryModal">
+    <i class="bi bi-tag me-1"></i>カテゴリー管理
+  </button>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
     <i class="bi bi-plus-lg me-1"></i>商品を追加
   </button>
+</div>
+
+<!-- カテゴリーフィルター -->
+<div class="mb-3 d-flex flex-wrap gap-1" id="productCategoryTabs">
+  <button class="btn btn-sm btn-primary" onclick="filterProducts(null)" id="pcat-all">すべて</button>
 </div>
 
 <!-- 商品テーブル -->
@@ -19,6 +27,7 @@
             <th style="width:3rem">#</th>
             <th style="width:3rem">絵文字</th>
             <th>商品名</th>
+            <th>カテゴリー</th>
             <th class="text-end">税抜価格</th>
             <th class="text-end">税込価格</th>
             <th class="text-center">税区分</th>
@@ -27,6 +36,29 @@
         </thead>
         <tbody id="productTable"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- カテゴリー管理モーダル -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-tag me-2"></i>カテゴリー管理</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex gap-2 mb-3">
+          <input id="newCategoryName" type="text" class="form-control" placeholder="新しいカテゴリー名（例: 日用品）">
+          <button class="btn btn-primary" onclick="createCategory()">追加</button>
+        </div>
+        <div id="categoryError" class="alert alert-danger d-none"></div>
+        <ul class="list-group" id="categoryList"></ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+      </div>
     </div>
   </div>
 </div>
@@ -44,6 +76,12 @@
         <div class="mb-3">
           <label class="form-label fw-semibold">商品名 <span class="text-danger">*</span></label>
           <input id="addPName" type="text" class="form-control" placeholder="例: コーラ（500ml）">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">カテゴリー</label>
+          <select id="addPCategory" class="form-select">
+            <option value="">未分類</option>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">税抜価格（円） <span class="text-danger">*</span></label>
@@ -89,6 +127,12 @@
         <div class="mb-3">
           <label class="form-label fw-semibold">商品名 <span class="text-danger">*</span></label>
           <input id="editPName" type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">カテゴリー</label>
+          <select id="editPCategory" class="form-select">
+            <option value="">未分類</option>
+          </select>
         </div>
         <div class="mb-3">
           <label class="form-label fw-semibold">税抜価格（円） <span class="text-danger">*</span></label>

@@ -28,6 +28,8 @@ def build_product_master() -> dict[str, Product]:
             price=r["price"],
             tax_category=TaxCategory(r["tax_category"]),
             emoji=r["emoji"] or "",
+            category_id=r.get("category_id"),
+            category_name=r.get("category_name") or "",
         )
         for r in rows
     }
@@ -50,7 +52,8 @@ def save_cart(cart: Cart) -> None:
 @app.route("/")
 def pos():
     products = build_product_master()
-    return render_template("pos.html", products=products)
+    categories = db.get_all_categories()
+    return render_template("pos.html", products=products, categories=categories)
 
 
 @app.route("/products")
@@ -94,17 +97,21 @@ def api_products():
 
 @app.post("/api/products")
 def api_product_create():
-    data  = request.get_json(force=True)
-    name  = data.get("name", "").strip()
-    price = data.get("price")
-    tax   = data.get("tax_category", "standard")
-    emoji = data.get("emoji", "").strip()
+    data        = request.get_json(force=True)
+    name        = data.get("name", "").strip()
+    price       = data.get("price")
+    tax         = data.get("tax_category", "standard")
+    emoji       = data.get("emoji", "").strip()
+    category_id = data.get("category_id")
     if not name or price is None:
         return jsonify({"error": "商品名と価格は必須です"}), 400
     if tax not in ("standard", "reduced"):
         return jsonify({"error": "税区分が不正です"}), 400
     try:
-        pid = db.create_product(name, float(price), tax, emoji)
+        pid = db.create_product(
+            name, float(price), tax, emoji,
+            int(category_id) if category_id else None,
+        )
         return jsonify({"id": pid, "message": "登録しました"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -112,20 +119,61 @@ def api_product_create():
 
 @app.put("/api/products/<int:product_id>")
 def api_product_update(product_id: int):
-    data  = request.get_json(force=True)
-    name  = data.get("name", "").strip()
-    price = data.get("price")
-    tax   = data.get("tax_category", "standard")
-    emoji = data.get("emoji", "").strip()
+    data        = request.get_json(force=True)
+    name        = data.get("name", "").strip()
+    price       = data.get("price")
+    tax         = data.get("tax_category", "standard")
+    emoji       = data.get("emoji", "").strip()
+    category_id = data.get("category_id")
     if not name or price is None:
         return jsonify({"error": "商品名と価格は必須です"}), 400
-    db.update_product(product_id, name, float(price), tax, emoji)
+    db.update_product(
+        product_id, name, float(price), tax, emoji,
+        int(category_id) if category_id else None,
+    )
     return jsonify({"message": "更新しました"})
 
 
 @app.delete("/api/products/<int:product_id>")
 def api_product_delete(product_id: int):
     db.delete_product(product_id)
+    return jsonify({"message": "削除しました"})
+
+
+@app.get("/api/categories")
+def api_categories():
+    return jsonify(db.get_all_categories())
+
+
+@app.post("/api/categories")
+def api_category_create():
+    data = request.get_json(force=True)
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"error": "カテゴリー名は必須です"}), 400
+    try:
+        cid = db.create_category(name)
+        return jsonify({"id": cid, "message": "登録しました"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.put("/api/categories/<int:category_id>")
+def api_category_update(category_id: int):
+    data = request.get_json(force=True)
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"error": "カテゴリー名は必須です"}), 400
+    try:
+        db.update_category(category_id, name)
+        return jsonify({"message": "更新しました"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.delete("/api/categories/<int:category_id>")
+def api_category_delete(category_id: int):
+    db.delete_category(category_id)
     return jsonify({"message": "削除しました"})
 
 

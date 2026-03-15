@@ -23,10 +23,18 @@
           <small class="text-muted">選択するとポイントが貯まります</small>
         </div>
 
+        <!-- カテゴリーフィルター -->
+        <div class="mb-3 d-flex flex-wrap gap-1" id="posCategoryTabs">
+          <button class="btn btn-sm btn-primary" onclick="filterPOS(null)" id="poscat-all">すべて</button>
+          {% for cat in categories %}
+          <button class="btn btn-sm btn-outline-primary" onclick="filterPOS({{ cat.id }})" id="poscat-{{ cat.id }}">{{ cat.name }}</button>
+          {% endfor %}
+        </div>
+
         <!-- 商品カード -->
         <div class="row g-3" id="productGrid">
           {% for p in products.values() %}
-          <div class="col-6 col-md-4 col-xl-3">
+          <div class="col-6 col-md-4 col-xl-3 product-col" data-category-id="{{ p.category_id or '' }}">
             <div class="card product-card h-100 shadow-sm"
                  onclick="addToCart('{{ p.id }}')"
                  data-pid="{{ p.id }}">
@@ -41,6 +49,11 @@
                   <span class="badge bg-secondary">標準10%</span>
                   {% endif %}
                 </div>
+                {% if p.category_name %}
+                <div class="mt-1">
+                  <span class="badge bg-light text-dark border" style="font-size:.6rem;">{{ p.category_name }}</span>
+                </div>
+                {% endif %}
               </div>
             </div>
           </div>

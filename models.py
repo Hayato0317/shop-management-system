@@ -37,6 +37,8 @@ class Product:
     price: float
     tax_category: TaxCategory
     emoji: str = ""
+    category_id: Optional[int] = None
+    category_name: str = ""
 
     @property
     def tax_amount(self) -> float:
@@ -55,6 +57,8 @@ class Product:
             "tax_category": self.tax_category.value,
             "tax_label": self.tax_category.label,
             "emoji": self.emoji,
+            "category_id": self.category_id,
+            "category_name": self.category_name,
         }
 
 

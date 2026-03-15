@@ -6,13 +6,27 @@ app.py — Flask エントリーポイント
 from __future__ import annotations
 
 import os
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for, Response
 
 import database as db
 from models import Cart, Product, TaxCategory
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-freee-2024")
+
+# ── Basic 認証 ────────────────────────────────────────
+_AUTH_USER = os.environ.get("BASIC_AUTH_USERNAME", "admin")
+_AUTH_PASS = os.environ.get("BASIC_AUTH_PASSWORD", "freee2024")
+
+@app.before_request
+def basic_auth():
+    auth = request.authorization
+    if not auth or auth.username != _AUTH_USER or auth.password != _AUTH_PASS:
+        return Response(
+            "ログインが必要です",
+            401,
+            {"WWW-Authenticate": 'Basic realm="ShopSystem"'},
+        )
 
 # ── 起動時に DB 初期化 ────────────────────────────────
 db.init_db()

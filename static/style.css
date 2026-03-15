@@ -1,0 +1,85 @@
+/* ── 全体 ─────────────────────────────────── */
+body {
+  background: #f0f4f8;
+  font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+}
+
+/* ── 商品カード ──────────────────────────── */
+.product-card {
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  border: 2px solid transparent;
+  user-select: none;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.12) !important;
+  border-color: #0d6efd;
+}
+.product-card:active {
+  transform: scale(.97);
+}
+.product-emoji {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+/* ── カート行 ────────────────────────────── */
+.cart-item {
+  border-bottom: 1px solid #e9ecef;
+  padding: .6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.cart-item:last-child { border-bottom: none; }
+.cart-item .item-name  { flex: 1; font-weight: 600; font-size: .9rem; }
+.cart-item .item-price { font-weight: 700; color: #0d6efd; min-width: 5rem; text-align: right; }
+.qty-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  font-size: .85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .1s;
+}
+.qty-btn:hover { background: #e9ecef; }
+.qty-display { min-width: 1.5rem; text-align: center; font-weight: 600; }
+
+/* ── レシート ────────────────────────────── */
+.receipt-box {
+  background: #fffef5;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 1.25rem;
+  white-space: pre-wrap;
+  line-height: 1.7;
+}
+
+/* ── テーブル行ホバー ──────────────────── */
+.table-hover tbody tr { cursor: default; }
+
+/* ── カード上部の装飾線 ──────────────────── */
+.card-header {
+  background: #fff;
+  border-bottom: 2px solid #e9ecef;
+  font-size: .95rem;
+}
+
+/* ── バッジ ──────────────────────────────── */
+.badge { font-weight: 500; }
+
+/* ── 空カート ────────────────────────────── */
+.empty-cart {
+  text-align: center;
+  padding: 2rem;
+  color: #adb5bd;
+}
+.empty-cart i { font-size: 3rem; }

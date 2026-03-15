@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}レジ（POS）{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- 左: 商品一覧 -->
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-grid-3x3-gap fs-5 text-primary"></i>
+        <span class="fw-bold">商品一覧</span>
+        <span class="badge bg-secondary ms-auto">クリックで追加</span>
+      </div>
+      <div class="card-body">
+
+        <!-- 顧客選択 -->
+        <div class="mb-3 d-flex align-items-center gap-2">
+          <i class="bi bi-person-circle text-primary"></i>
+          <select id="customerSelect" class="form-select form-select-sm w-auto">
+            <option value="">顧客未選択（ゲスト）</option>
+          </select>
+          <small class="text-muted">選択するとポイントが貯まります</small>
+        </div>
+
+        <!-- 商品カード -->
+        <div class="row g-3" id="productGrid">
+          {% for p in products.values() %}
+          <div class="col-6 col-md-4 col-xl-3">
+            <div class="card product-card h-100 shadow-sm"
+                 onclick="addToCart('{{ p.id }}')"
+                 data-pid="{{ p.id }}">
+              <div class="card-body text-center p-3">
+                <div class="product-emoji">{{ p.emoji }}</div>
+                <div class="fw-semibold small mt-1">{{ p.name }}</div>
+                <div class="text-primary fw-bold mt-1">¥{{ "{:,}".format(p.price_with_tax | int) }}</div>
+                <div class="text-muted" style="font-size:.7rem;">
+                  {% if p.tax_category.value == 'reduced' %}
+                  <span class="badge bg-success">軽減8%</span>
+                  {% else %}
+                  <span class="badge bg-secondary">標準10%</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 右: カート -->
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-cart3 fs-5 text-primary"></i>
+        <span class="fw-bold">カート</span>
+        <button class="btn btn-sm btn-outline-danger ms-auto" onclick="clearCart()">
+          <i class="bi bi-trash3"></i> クリア
+        </button>
+      </div>
+      <div class="card-body p-0">
+        <div id="cartItems" class="list-group list-group-flush"></div>
+      </div>
+
+      <!-- 小計 -->
+      <div class="card-footer">
+        <table class="table table-sm mb-2">
+          <tr class="text-muted small">
+            <td>小計（税抜）</td>
+            <td class="text-end" id="subtotalExTax">¥0</td>
+          </tr>
+          <tr class="text-muted small">
+            <td>消費税</td>
+            <td class="text-end" id="totalTax">¥0</td>
+          </tr>
+          <tr id="discountRow" class="text-danger small d-none">
+            <td id="discountLabel">割引</td>
+            <td class="text-end" id="discountAmt"></td>
+          </tr>
+          <tr class="fw-bold fs-5">
+            <td>合計</td>
+            <td class="text-end text-primary" id="totalAmount">¥0</td>
+          </tr>
+        </table>
+
+        <!-- 割引 -->
+        <div class="d-flex gap-2 mb-3">
+          <input type="number" id="discountValue" class="form-control form-control-sm" placeholder="割引値" min="0">
+          <select id="discountType" class="form-select form-select-sm w-auto">
+            <option value="amount">円引き</option>
+            <option value="percent">%引き</option>
+          </select>
+          <button class="btn btn-sm btn-outline-warning" onclick="applyDiscount()">適用</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearDiscount()">解除</button>
+        </div>
+
+        <!-- 精算 -->
+        <button class="btn btn-primary w-100 py-2 fw-bold fs-5" onclick="checkout()" id="checkoutBtn" disabled>
+          <i class="bi bi-cash-coin me-2"></i>精算する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- レシート モーダル -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>レシート</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="receiptContent" class="receipt-box font-monospace small"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success w-100" data-bs-dismiss="modal">閉じる</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/app.js"></script>
+<script>
+  initPOS();
+</script>
+{% endblock %}

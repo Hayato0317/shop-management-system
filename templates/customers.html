@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}顧客管理{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-people text-primary me-2"></i>顧客管理</h4>
+  <button class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#addModal">
+    <i class="bi bi-person-plus me-1"></i>新規登録
+  </button>
+</div>
+
+<!-- 検索 -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body py-2">
+    <div class="input-group">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="text" id="searchInput" class="form-control" placeholder="名前・メール・電話番号で検索...">
+    </div>
+  </div>
+</div>
+
+<!-- テーブル -->
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>名前</th>
+            <th>メール</th>
+            <th>電話番号</th>
+            <th class="text-center">ポイント</th>
+            <th>登録日</th>
+            <th class="text-center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="customerTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 新規登録モーダル -->
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>顧客登録</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="addError" class="alert alert-danger d-none"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">名前 <span class="text-danger">*</span></label>
+          <input id="addName" type="text" class="form-control" placeholder="山田 太郎">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">メールアドレス</label>
+          <input id="addEmail" type="email" class="form-control" placeholder="yamada@example.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">電話番号</label>
+          <input id="addPhone" type="tel" class="form-control" placeholder="090-0000-0000">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">住所</label>
+          <input id="addAddress" type="text" class="form-control" placeholder="東京都渋谷区...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button class="btn btn-primary" onclick="createCustomer()">
+          <i class="bi bi-check2 me-1"></i>登録する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>顧客編集</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input id="editId" type="hidden">
+        <div id="editError" class="alert alert-danger d-none"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">名前 <span class="text-danger">*</span></label>
+          <input id="editName" type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">メールアドレス</label>
+          <input id="editEmail" type="email" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">電話番号</label>
+          <input id="editPhone" type="tel" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">住所</label>
+          <input id="editAddress" type="text" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button class="btn btn-primary" onclick="updateCustomer()">
+          <i class="bi bi-check2 me-1"></i>更新する
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/app.js"></script>
+<script>
+  initCustomers();
+</script>
+{% endblock %}

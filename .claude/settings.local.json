@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m pip install flask -q)",
+      "Bash(python -m pip install flask -q)",
+      "Bash(where python:*)",
+      "Bash(py -3 --version)",
+      "Bash(py -3 -m pip install flask -q)",
+      "Bash(python3 -m pip install flask)",
+      "Read(//c/Users/中野隼斗/AppData/Local/Programs/**)",
+      "Read(//c/Users/中野隼斗/AppData/Local//**)"
+    ]
+  }
+}
